@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { useSocket, useDevices, useDeviceControl } from './SocketProvider';
 import { cn } from '@/lib/utils';
 
-export function KioskAudioUI() {
+export function AudioTouchUI() {
   const { isConnected, error } = useSocket();
   const { inputs, outputs } = useDevices();
   const {
