@@ -77,3 +77,11 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+body {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}

@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { useSocket, useDevices, useDeviceControl } from './SocketProvider';
 import { cn } from '@/lib/utils';
 
-export function AudioTouchUI() {
+export function KioskAudioUI() {
   const { isConnected, error } = useSocket();
   const { inputs, outputs } = useDevices();
   const {
@@ -21,7 +21,13 @@ export function AudioTouchUI() {
 
   const [power, setPower] = useState(true);
 
-  const handleTouchVolume = (deviceId: string, direction: 'up' | 'down') => {
+  // Prevent text selection
+  const preventSelection = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
+
+  // Touch-optimized volume control
+  const handleVolumeTouch = (deviceId: string, direction: 'up' | 'down') => {
     const currentVolume = volumes[deviceId] || 0;
     const step = 5;
     const newVolume = direction === 'up' 
@@ -31,13 +37,17 @@ export function AudioTouchUI() {
   };
 
   return (
-    <div className={`h-[600px] max-w-[1024px] mx-auto bg-black text-white ${!power ? 'opacity-0' : 'opacity-100'} transition-opacity duration-500 overflow-hidden`}>
-      {/* Header */}
-      <div className="px-4 py-2 bg-zinc-900 border-b border-zinc-800">
+    <div 
+      className={`h-[480px] w-[800px] bg-black text-white ${!power ? 'opacity-0' : 'opacity-100'} 
+        transition-opacity duration-500 overflow-hidden touch-manipulation select-none`}
+      onMouseDown={preventSelection}
+    >
+      {/* Header - Optimized height for 480px screen */}
+      <div className="px-3 py-1 bg-zinc-900 border-b border-zinc-800 h-10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-blue-500 animate-pulse' : 'bg-zinc-700'}`} />
-            <h1 className="font-mono text-base tracking-wider">BABELPOD</h1>
+            <h1 className="font-mono text-sm tracking-wider">BABELPOD</h1>
           </div>
           <div className="flex gap-2">
             <Button 
@@ -59,18 +69,18 @@ export function AudioTouchUI() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-12 gap-2 p-2 h-[calc(100%-48px)]">
-        {/* Input Section */}
-        <div className="col-span-3 space-y-2">
+      {/* Main Content - Adjusted for 470px remaining height */}
+      <div className="grid grid-cols-12 gap-1 p-1 h-[470px]">
+        {/* Input Section - Narrower for small screen */}
+        <div className="col-span-3 space-y-1">
           <div className="text-xs font-mono text-zinc-500 px-1">INPUT</div>
-          <div className="space-y-1">
+          <div className="space-y-1 overflow-y-auto max-h-[430px]">
             {inputs.map(input => (
               <Button
                 key={input.id}
                 variant="ghost"
                 className={cn(
-                  "w-full h-16 justify-start px-3 bg-zinc-900 border border-zinc-800",
+                  "w-full h-12 justify-start px-2 bg-zinc-900 border border-zinc-800",
                   selectedInput === input.id && "border-blue-500 text-blue-500"
                 )}
                 onClick={() => switchInput(input.id)}
@@ -80,16 +90,16 @@ export function AudioTouchUI() {
                 ) : (
                   <Mic className="h-4 w-4 mr-2" />
                 )}
-                <span className="font-mono text-sm truncate">{input.name}</span>
+                <span className="font-mono text-xs truncate">{input.name}</span>
               </Button>
             ))}
           </div>
         </div>
 
-        {/* Output Section */}
-        <div className="col-span-9 space-y-2">
+        {/* Output Section - Optimized for touch */}
+        <div className="col-span-9 space-y-1">
           <div className="text-xs font-mono text-zinc-500 px-1">OUTPUT ZONES</div>
-          <div className="grid grid-cols-2 gap-2 h-[500px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 gap-1 h-[430px] overflow-y-auto pr-1">
             {outputs.map(output => (
               <Card 
                 key={output.id}
@@ -98,11 +108,11 @@ export function AudioTouchUI() {
                   selectedOutputs.includes(output.id) && "border-blue-500"
                 )}
               >
-                <CardContent className="p-4 space-y-4">
+                <CardContent className="p-2 space-y-2">
                   <Button
                     variant="ghost"
                     className={cn(
-                      "w-full h-12 justify-between px-3 text-zinc-300 hover:text-white",
+                      "w-full h-10 justify-between px-2 text-zinc-300 hover:text-white",
                       selectedOutputs.includes(output.id) && "text-white"
                     )}
                     onClick={() => {
@@ -117,33 +127,33 @@ export function AudioTouchUI() {
                         "h-4 w-4",
                         selectedOutputs.includes(output.id) ? "text-blue-500" : "text-zinc-400"
                       )} />
-                      <span className="font-mono text-sm truncate">{output.name}</span>
+                      <span className="font-mono text-xs truncate">{output.name}</span>
                     </div>
                   </Button>
 
                   {selectedOutputs.includes(output.id) && (
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm font-mono">
+                      <div className="flex items-center justify-between text-xs font-mono">
                         <Volume2 className="h-4 w-4 text-blue-500" />
                         <span className="text-blue-500">
                           {(volumes[output.id] || 0).toString().padStart(2, '0')}
                         </span>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-1">
                         <Button
                           variant="ghost"
-                          className="h-16 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xl font-bold"
-                          onTouchStart={() => handleTouchVolume(output.id, 'up')}
-                          onClick={() => handleTouchVolume(output.id, 'up')}
+                          className="h-12 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xl font-bold"
+                          onTouchStart={() => handleVolumeTouch(output.id, 'up')}
+                          onClick={() => handleVolumeTouch(output.id, 'up')}
                         >
                           +
                         </Button>
                         <Button
                           variant="ghost"
-                          className="h-16 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xl font-bold"
-                          onTouchStart={() => handleTouchVolume(output.id, 'down')}
-                          onClick={() => handleTouchVolume(output.id, 'down')}
+                          className="h-12 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xl font-bold"
+                          onTouchStart={() => handleVolumeTouch(output.id, 'down')}
+                          onClick={() => handleVolumeTouch(output.id, 'down')}
                         >
                           -
                         </Button>
@@ -168,7 +178,7 @@ export function AudioTouchUI() {
 
       {/* Error Display */}
       {error && (
-        <Alert variant="destructive" className="fixed bottom-4 left-4 right-4">
+        <Alert variant="destructive" className="fixed bottom-2 left-2 right-2">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
