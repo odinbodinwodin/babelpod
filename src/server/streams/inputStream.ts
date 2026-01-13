@@ -39,12 +39,15 @@ export class InputStreamManager {
       this.inputStream = new FromVoid();
     } else {
       logger('Starting arecord with device:', deviceId);
-      this.arecordInstance = spawn("arecord", [
+      const arecordArgs = [
         '-D', deviceId,
+        '-t', 'raw',
         '-c', this.audioConfig.channels.toString(),
         '-f', this.audioConfig.format,
         '-r', this.audioConfig.sampleRate.toString()
-      ]);
+      ];
+      logger('arecord args:', arecordArgs.join(' '));
+      this.arecordInstance = spawn("arecord", arecordArgs);
       
       this.arecordInstance.stderr?.on('data', (data: Buffer) => {
         logger('arecord stderr:', data.toString());
